@@ -36,7 +36,7 @@ int relprime(long x, long y)
 
 // euler n = length (filter (relprime n) [1 .. n-1])
 
-long euler( long pieceOfWork )
+long euler( long pieceOfWork, int extra )
 {
 
   long subSum = 0;
@@ -45,20 +45,20 @@ long euler( long pieceOfWork )
 
   long work[pieceOfWork];
 
-    for(i=0; i<pieceOfWork; i++)
+    for(i=0; i<pieceOfWork+extra; i++)
       work[i] = 0;
 
 
     MPI_Status status;
-    MPI_Recv(&work[0], pieceOfWork+1, MPI_LONG, 0, 0, MPI_COMM_WORLD, &status);
+    MPI_Recv(&work[0], pieceOfWork+1+extra, MPI_LONG, 0, 0, MPI_COMM_WORLD, &status);
 
-    printf("Message received by proc\n" );
+    //printf("Message received by proc\n" );
 
     //for (int k = 0; k <= pieceOfWork; k++) {
     //  printf("[%ld], ", work[k]);
     //}
 
-    for( index=0; index<=pieceOfWork; index++ )
+    for( index=0; index<=pieceOfWork+extra; index++ )
     {
 
       length = 0;
@@ -79,7 +79,7 @@ long euler( long pieceOfWork )
 
 // sumTotient lower upper = sum (map euler [lower, lower+1 .. upper])
 
-long sumTotient(long lower, long upper, int processes, long pieceOfWork )
+long sumTotient(long lower, long upper, int processes, long pieceOfWork, int extra )
 {
   int proc_num = 0;
   long i = 0;
@@ -157,13 +157,17 @@ int main(int argc, char ** argv)
     printf("pieceOfWork = %ld\n", pieceOfWork);
     printf("extra = %d\n", extra );
 
-    sumTotients = sumTotient (lower, upper, processes, pieceOfWork) ;
+    sumTotients = sumTotient (lower, upper, processes, pieceOfWork, extra) ;
 
     printf("\n\t + Sum of Totients  between [%ld..%ld] is %ld\n\n", lower, upper, sumTotients);
   }
+  else if ( rank == processes-1 ) {
+
+      euler(pieceOfWork, extra);
+  }
   else {
 
-      euler(pieceOfWork);
+      euler(pieceOfWork, 0);
   }
 
   MPI_Finalize();
