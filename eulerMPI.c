@@ -43,38 +43,45 @@ long euler( long pieceOfWork )
   long index = 0;
   long length, i;
 
-  long arrayOfWork[pieceOfWork];
+  long work[pieceOfWork];
 
-    for(i=0; i<=pieceOfWork; i++)
-      arrayOfWork[i] = 0;
+    for(i=0; i<pieceOfWork; i++)
+      work[i] = 0;
 
 
     MPI_Status status;
-    MPI_Recv(&arrayOfWork , pieceOfWork+1, MPI_LONG, 0, 0, MPI_COMM_WORLD, &status);
+    MPI_Recv(&work[0], pieceOfWork, MPI_LONG, 0, 0, MPI_COMM_WORLD, &status);
 
+    printf("Message received by proc\n" );
+
+    for (int k = 0; k < pieceOfWork; k++) {
+      printf("[%ld], ", work[k]);
+    }
 
     for( index=0; index<=pieceOfWork; index++ )
     {
 
       length = 0;
-      for( i=0; i< *(arrayOfWork+index); i++)
+      for( i=0; i< *(work+index); i++)
       {
-          if( relprime( *(arrayOfWork+index), i+1 ) )
+          if( relprime( *(work+index), i+1 ) )
             length++;
       }
 
       subSum+=length;
     }
 
-
+  printf("Before sent\n");
   MPI_Send(&subSum, 1 , MPI_LONG, 0 , 0 , MPI_COMM_WORLD);
+  printf("Message Sent to root\n");
 }
 
 
 // sumTotient lower upper = sum (map euler [lower, lower+1 .. upper])
 
-long sumTotient(long lower, long upper, long pieceOfWork)
+long sumTotient(long lower, long upper, int processes, long pieceOfWork )
 {
+  int proc_num = 0;
   long i = 0;
   long j = 0;
   long sum = 0;
@@ -84,15 +91,35 @@ long sumTotient(long lower, long upper, long pieceOfWork)
   MPI_Status status;
 
   for(i=0; i<=pieceOfWork; i++)
-    arrayOfWork[i] = i+1;
+    arrayOfWork[i] = 0;
 
 
- MPI_Send(&arrayOfWork, pieceOfWork+1, MPI_LONG, 1/*rank*/, 0 , MPI_COMM_WORLD);
- MPI_Recv(&result, 1, MPI_LONG, 1/*rank*/ , 0 , MPI_COMM_WORLD, &status);
+  for( proc_num=1; proc_num<processes; proc_num++ )
+  {
 
- sum = sum + result ;
+    for( i=lower+((proc_num-1)*pieceOfWork); i<(lower+(proc_num*pieceOfWork)); i++ )
+    {
+      j=0;
+
+      arrayOfWork[j] = i;
+        //printf("%ld ", arrayOfWork[j] );
+      j++;
+
+    }
+
+    for (int k = 0; k < pieceOfWork; k++) {
+      printf("%ld ", arrayOfWork[k]);
+    }
+
+    MPI_Send(&arrayOfWork[0], pieceOfWork, MPI_LONG, proc_num/*rank*/, 0 , MPI_COMM_WORLD);
+    MPI_Recv(&result, 1, MPI_LONG, proc_num/*rank*/ , 0 , MPI_COMM_WORLD, &status);
+
+
+    sum = sum + result;
+  }
 
  return sum;
+
 }
 
 
@@ -120,15 +147,18 @@ int main(int argc, char ** argv)
   MPI_Comm_size (MPI_COMM_WORLD, &processes);
   MPI_Comm_rank (MPI_COMM_WORLD, &rank);
 
-  //int rest = ( ( upper-lower )%((upper-lower ) /(processes-1) ) );
+  int extra = ( ( upper-lower )%((upper-lower ) /(processes-1) ) );
   pieceOfWork = (upper-lower) / (processes-1);
 
-  printf("pieceOfWork = %ld\n", pieceOfWork);
-  //printf("rest %d\n", rest);
+
 
   if (rank == 0)
   {
-    sumTotients = sumTotient (lower, upper, pieceOfWork) ;
+    printf("pieceOfWork = %ld\n", pieceOfWork);
+    printf("extra = %d\n", extra );
+
+    sumTotients = sumTotient (lower, upper, processes, pieceOfWork) ;
+
     printf("\n\t + Sum of Totients  between [%ld..%ld] is %ld\n\n", lower, upper, sumTotients);
   }
   else {
