@@ -50,13 +50,13 @@ long euler( long pieceOfWork )
 
 
     MPI_Status status;
-    MPI_Recv(&work[0], pieceOfWork, MPI_LONG, 0, 0, MPI_COMM_WORLD, &status);
+    MPI_Recv(&work[0], pieceOfWork+1, MPI_LONG, 0, 0, MPI_COMM_WORLD, &status);
 
     printf("Message received by proc\n" );
 
-    for (int k = 0; k < pieceOfWork; k++) {
-      printf("[%ld], ", work[k]);
-    }
+    //for (int k = 0; k <= pieceOfWork; k++) {
+    //  printf("[%ld], ", work[k]);
+    //}
 
     for( index=0; index<=pieceOfWork; index++ )
     {
@@ -97,9 +97,9 @@ long sumTotient(long lower, long upper, int processes, long pieceOfWork )
   for( proc_num=1; proc_num<processes; proc_num++ )
   {
 
-    for( i=lower+((proc_num-1)*pieceOfWork); i<(lower+(proc_num*pieceOfWork)); i++ )
+    for( i=lower+((proc_num-1)*pieceOfWork); i<=(lower+(proc_num*pieceOfWork)); i++ )
     {
-      j=0;
+      //j=0;
 
       arrayOfWork[j] = i;
         //printf("%ld ", arrayOfWork[j] );
@@ -107,11 +107,11 @@ long sumTotient(long lower, long upper, int processes, long pieceOfWork )
 
     }
 
-    for (int k = 0; k < pieceOfWork; k++) {
-      printf("%ld ", arrayOfWork[k]);
-    }
+    //for (int k = 0; k < pieceOfWork; k++) {
+      //printf("%ld ", arrayOfWork[k]);
+    //}
 
-    MPI_Send(&arrayOfWork[0], pieceOfWork, MPI_LONG, proc_num/*rank*/, 0 , MPI_COMM_WORLD);
+    MPI_Send(&arrayOfWork[0], pieceOfWork+1, MPI_LONG, proc_num/*rank*/, 0 , MPI_COMM_WORLD);
     MPI_Recv(&result, 1, MPI_LONG, proc_num/*rank*/ , 0 , MPI_COMM_WORLD, &status);
 
 
