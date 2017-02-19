@@ -71,9 +71,9 @@ long euler( long pieceOfWork )
       subSum+=length;
     }
 
-  printf("Before sent\n");
+  //printf("Before sent\n");
   MPI_Send(&subSum, 1 , MPI_LONG, 0 , 0 , MPI_COMM_WORLD);
-  printf("Message Sent to root\n");
+  //printf("Message Sent to root\n");
 }
 
 
@@ -97,10 +97,10 @@ long sumTotient(long lower, long upper, int processes, long pieceOfWork )
   for( proc_num=1; proc_num<processes; proc_num++ )
   {
 
+    j=0;
+
     for( i=lower+((proc_num-1)*pieceOfWork); i<=(lower+(proc_num*pieceOfWork)); i++ )
     {
-      //j=0;
-
       arrayOfWork[j] = i;
         //printf("%ld ", arrayOfWork[j] );
       j++;
